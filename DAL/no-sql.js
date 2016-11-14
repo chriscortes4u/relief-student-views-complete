@@ -4,9 +4,7 @@ const PouchDB = require('pouchdb-http');
 PouchDB.plugin(require('pouchdb-mapreduce'));
 const fetchConfig = require('zero-config');
 
-var config = fetchConfig(path.join(__dirname, '..'), {
-    dcValue: 'test'
-});
+var config = fetchConfig(path.join(__dirname, '..'), {dcValue: 'test'});
 const urlFormat = require('url').format;
 const db = new PouchDB(urlFormat(config.get("couch")));
 
@@ -27,58 +25,64 @@ var dal = {
 /////////////////////////
 //  UTILITY FUNCTIONS
 /////////////////////////
+
+function listReliefEfforts(sortBy, startkey, limit, callback) {}
+
 var convertPersons = function(queryRow) {
     queryRow.doc.sortToken = queryRow.key;
     return queryRow.doc;
 };
 
-// function queryDB(sortBy, startKey, limit, callback) {
-//     if (typeof startKey == "undefined" || startKey === null) {
-//         return callback(new Error('Missing search parameter'));
-//     } else if (typeof limit == "undefined" || limit === null || limit === 0) {
-//         return callback(new Error('Missing limit parameter'));
-//
-//     } else {
-//         limit = startKey === '' ? Number(limit) : Number(limit) + 1;
-//
-//         console.log("sortBy:", sortBy, " startKey: ", startKey, " limit: ", limit)
-//
-//         //////     PROMISES
-//         db.query(sortBy, {
-//             startkey: startKey,
-//             limit: limit,
-//             include_docs: true
-//         }).then(function(result) {
-//             // Do we need to skip (remove/shift) the first item
-//             //  out of the array
-//             if (startKey !== '' && result.rows.length > 0) {
-//                 // remove first item
-//                 result.rows.shift();
-//             }
-//             return callback(null, result.rows.map(convertPersons));
-//         }).catch(function(err) {
-//             return callback(err);
-//         });
-//
-//         //////     CALLBACKS
-//         // db.query(sortBy, {
-//         //     startkey: startKey,
-//         //     limit: limit,
-//         //     include_docs: true
-//         // }, function(err, result) {
-//         //     if (err) return callback(err);
-//         //     if (result) {
-//         //         // Do we need to skip (remove/shift) the first item
-//         //         //  out of the array
-//         //         if (startKey !== '' && result.rows.length > 0) {
-//         //             // remove first item
-//         //             result.rows.shift();
-//         //         }
-//         //         return callback(null, result.rows.map(convertPersons));
-//         //     }
-//         // });
-//     }
-// }
+function queryDB(sortBy, startkey, limit, callback) {
+    if (typeof startkey == "undefined" || startkey === null) {
+        return callback(new Error('Missing search parameter'));
+    } else if (typeof limit == "undefined" || limit === null || limit === 0) {
+        return callback(new Error('Missing limit parameter'));
+
+    } else {
+        limit = startkey === ''
+            ? Number(limit)
+            : Number(limit) + 1;
+
+        console.log("sortBy:", sortBy, " startkey: ", startkey, " limit: ", limit)
+
+        //////     PROMISES
+        // db.query(sortBy, {
+        //     startkey: startkey,
+        //     limit: limit,
+        //     include_docs: true
+        // }).then(function(result) {
+        //     // Do we need to skip (remove/shift) the first item
+        //     //  out of the array
+        //     if (startkey !== '' && result.rows.length > 0) {
+        //         // remove first item
+        //         result.rows.shift();
+        //     }
+        //     return callback(null, result.rows.map(convertPersons));
+        // }).catch(function(err) {
+        //     return callback(err);
+        // });
+
+        ////     CALLBACKS
+        db.query(sortBy, {
+            startkey: startkey,
+            limit: limit,
+            include_docs: true
+        }, function(err, result) {
+            if (err)
+                return callback(err);
+            if (result) {
+                // Do we need to skip (remove/shift) the first item
+                //  out of the array
+                if (startkey !== '' && result.rows.length > 0) {
+                    // remove first item
+                    result.rows.shift();
+                }
+                return callback(null, result.rows.map(convertPersons));
+            }
+        });
+    }
+}
 
 function getDocByID(id, callback) {
     // Call to couch retrieving a document with the given _id value.
@@ -95,9 +99,12 @@ function getDocByID(id, callback) {
 
         //////     CALLBACKS
         db.get(id, function(err, data) {
-            if (err) return callback(err);
-            if (data) return callback(null, data);
-        });
+            if (err)
+                return callback(err);
+            if (data)
+                return callback(null, data);
+            }
+        );
     }
 }
 
@@ -106,18 +113,18 @@ function createView(designDoc, callback) {
         return callback(new Error('400Missing design document.'));
     } else {
 
-        //////     PROMISES
-        db.put(designDoc).then(function(response) {
-            return callback(null, response);
-        }).catch(function(err) {
-            return callback(err);
-        });
-
-        //////     CALLBACKS
-        // db.put(designDoc, function(err, response) {
-        //     if (err) return callback(err);
-        //     if (response) return callback(null, response);
+        // //////     PROMISES
+        // db.put(designDoc).then(function(response) {
+        //     return callback(null, response);
+        // }).catch(function(err) {
+        //     return callback(err);
         // });
+
+        ////     CALLBACKS
+        db.put(designDoc, function(err, response) {
+            if (err) return callback(err);
+            if (response) return callback(null, response);
+        });
     }
 }
 
@@ -131,16 +138,16 @@ function updateDoc(data, callback) {
         return callback(new Error('400Missing rev property from data'));
     } else {
 
-       //////     PROMISES
-       // attempt to db.get() doc out of db,
-       // if it's not there, it can't be updated.
-    //    db.get(data._id).then(function(doc) {
-    //      return db.put(data);
-    //    }).then(function(response) {
-    //        return callback(null, response)
-    //    }).catch(function(err) {
-    //        return callback(err)
-    //    });
+        //////     PROMISES
+        // attempt to db.get() doc out of db,
+        // if it's not there, it can't be updated.
+        //    db.get(data._id).then(function(doc) {
+        //      return db.put(data);
+        //    }).then(function(response) {
+        //        return callback(null, response)
+        //    }).catch(function(err) {
+        //        return callback(err)
+        //    });
 
         // db.put(data).then(function(response) {
         //     return callback(null, response);
@@ -150,9 +157,12 @@ function updateDoc(data, callback) {
 
         //////     CALLBACKS
         db.put(data, function(err, response) {
-            if (err) return callback(err);
-            if (response) return callback(null, response);
-        });
+            if (err)
+                return callback(err);
+            if (response)
+                return callback(null, response);
+            }
+        );
     }
 }
 
@@ -173,16 +183,15 @@ function deleteDoc(data, callback) {
 
         //////     CALLBACKS
         db.remove(data, function(err, response) {
-            if (err) return callback(err);
-            if (response) return callback(null, response);
-        });
+            if (err)
+                return callback(err);
+            if (response)
+                return callback(null, response);
+            }
+        );
     }
 
 }
-
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////
 //                              PERSONS
@@ -191,9 +200,32 @@ function getPerson(id, callback) {
     getDocByID(id, callback);
 }
 
-// function listPersons(sortBy, startKey, limit, callback) {
-//     queryDB(sortBy, startKey, limit, callback);
-// }
+function listPersons(sortBy, startKey, limit, callback) {
+  queryDB(sortBy, startKey, limit, callback);
+
+    //validate our params
+    if (typeof sortBy == "undefined" || sortBy === null) {
+        return callback(new Error('Missing search parameter'));
+    }
+
+    limit = startKey !== ''
+        ? limit + 1
+        : limit
+
+    db.query(sortBy, {
+        startkey: startKey,
+        limit: limit
+    }, function(err, data) {
+        if (err)
+            return callback(err)
+
+        if (startKey !== '') {
+            data.rows.shift()
+        }
+
+        callback(null, data)
+    })
+}
 
 function updatePerson(data, callback) {
     updateDoc(data, callback);
@@ -205,7 +237,7 @@ function deletePerson(data, callback) {
 
 function createPerson(data, callback) {
     // Call to couch retrieving a document with the given _id value.
-    if (typeof data == "undefined" || data === null) {
+    if (typeof data === "undefined" || data === null) {
         return callback(new Error('400Missing data for create'));
     } else if (data.hasOwnProperty('_id') === true) {
         return callback(new Error('400Unnecessary id property within data.'));
@@ -232,16 +264,14 @@ function createPerson(data, callback) {
 
         //////     CALLBACKS
         db.put(data, function(err, response) {
-            if (err) return callback(err);
-            if (response) return callback(null, response);
-        });
+            if (err)
+                return callback(err);
+            if (response)
+                return callback(null, response);
+            }
+        );
     }
 }
-
-
-
-
-
 
 //////////////////////////////////////////////////////////////////////
 //                       RELIEF EFFORTS
@@ -250,9 +280,30 @@ function getReliefEffort(id, callback) {
     getDocByID(id, callback);
 }
 
-// function listReliefEfforts(sortBy, startKey, limit, callback) {
-//     queryDB(sortBy, startKey, limit, callback);
-// }
+function listReliefEfforts(sortBy, startKey, limit, callback) {
+
+    if (typeof sortBy == "undefined" || sortBy === null) {
+        return callback(new Error('Missing search parameter'));
+    }
+
+    limit = startKey !== ''
+        ? limit + 1
+        : limit
+
+    db.query(sortBy, {
+        startkey: startKey,
+        limit: limit
+    }, function(err, data) {
+        if (err)
+            return callback(err)
+
+        if (startKey !== '') {
+            data.rows.shift()
+        }
+
+        callback(null, data)
+    })
+}
 
 function updateReliefEffort(data, callback) {
     updateDoc(data, callback);
@@ -267,7 +318,7 @@ function createReliefEffort(data, callback) {
     if (typeof data == "undefined" || data === null) {
         return callback(new Error('400Missing data for create'));
     } else if (data.hasOwnProperty('_id') === true) {
-        return callback(new Error('400Unnecessary _d property within data. ' +
+        return callback(new Error('400Unnecessary _id property within data. ' +
             'createPerson() will generate a unique _id'));
     } else if (data.hasOwnProperty('_rev') === true) {
         return callback(new Error('400Unnecessary rev property within data'));
@@ -282,18 +333,18 @@ function createReliefEffort(data, callback) {
         data.type = 'relief';
         data._id = 'relief_' + data.organizationID.replace(/ /g, "_").replace(/\./g, "") + '_' + data.name.replace(/ /g, "_");
 
-        //////     PROMISES
-        db.put(data).then(function(response) {
-            return callback(null, response);
-        }).catch(function(err) {
-            return callback(err);
-        });
-
-        //////     CALLBACKS
-        // db.put(data, function(err, response) {
-        //     if (err) return callback(err);
-        //     if (response) return callback(null, response);
+        // //////     PROMISES
+        // db.put(data).then(function(response) {
+        //     return callback(null, response);
+        // }).catch(function(err) {
+        //     return callback(err);
         // });
+
+        ////     CALLBACKS
+        db.put(data, function(err, response) {
+            if (err) return callback(err);
+            if (response) return callback(null, response);
+        });
     }
 }
 
