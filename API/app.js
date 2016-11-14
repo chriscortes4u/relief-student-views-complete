@@ -5,7 +5,7 @@ var app = express();
 const HTTPError = require('node-http-error');
 const port = process.env.PORT || 4000;
 //const dal = dalNoSQL == 'nosql' ? require('../DAL/no-sql.js') : require('../DAL/no-sql.js');
-const dal = require('../DAL/no-sql.js');
+const dal = require('../DAL/my-sql.js');
 var bodyParser = require('body-parser');
 app.use(bodyParser.json());
 var jsonParser = bodyParser.json();
@@ -85,10 +85,14 @@ app.delete('/person/:id', function(req, res, next) {
 })
 
 app.get('/person', function(req, res, next){
-  const sortByParam = req.query.sortBy || 'lastName';
-  const sortBy = getPersonSortBy(sortByParam, 'nosql')
+  const sortByParam = req.query.sortBy || 'default';
+  console.log(sortByParam)
+  const sortBy = getPersonSortBy(sortByParam, 'mysql')
+  console.log(sortBy)
   const sortToken = req.query.sortToken || " ";
   const limit = req.query.limit || 5;
+
+
 
   dal.listPersons(sortBy, sortToken, limit, function callback(err, data) {
     if(err){
@@ -98,7 +102,7 @@ app.get('/person', function(req, res, next){
     if (data) {
         console.log('GET' + req.path, "query:", req.query, data)
         res.append('Content-type', 'application/json');
-        res.status(201).send(data);
+        res.status(200).send(data);
     }
   })
 })
