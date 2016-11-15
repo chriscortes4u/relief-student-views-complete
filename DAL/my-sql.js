@@ -7,12 +7,12 @@ var dal = {
     listPersons: listPersons,
     updatePerson: updatePerson,
     createPerson: createPerson,
-    deletePerson: deletePerson
+    deletePerson: deletePerson,
     // createView: createView,
     // getReliefEffort: getReliefEffort,
     // listReliefEfforts: listReliefEfforts,
     // updateReliefEffort: updateReliefEffort,
-    //createReliefEffort: createReliefEffort,
+    createReliefEffort: createReliefEffort
     // deleteReliefEffort: deleteReliefEffort
 };
 
@@ -208,16 +208,15 @@ function queryDB(tablename, sortBy, searchCriteria, limit, callback) {
                 return err;
             }
         )
-    }
+    };
 
     ////////////////RELIEF EFFORTS FUNCTIONS ///////////////
-    /*
-function deleteRelief(data, callback) {
-    deleteDocByID('Relief', data._id, callback)
-}
+
+//function deleteRelief(data, callback) {
+    //deleteDocByID('Relief', data._id, callback)
+//}
 
 
-function getReliefEffort
 
 
 function createReliefEffort(data, callback) {
@@ -254,6 +253,39 @@ function createReliefEffort(data, callback) {
             return err;
         }
     );
+  }
 }
-*/
+
+function updateReliefEffort(data, callback) {
+    if (typeof data == "undefined" || data === null) {
+        return callback(new Error('400Missing data for update'));
+    } else if (data.hasOwnProperty('_id') !== true) {
+        return callback(new Error('400Missing id property from data'));
+    } else {
+        var connection = createConnection()
+        var ID = data._id;
+        delete data._id;
+
+        connection.query('UPDATE Relief SET ? WHERE ID =' + ID, prepDataForDB(data), function(err, result) {
+            if (err)
+                return callback(err)
+        });
+        if (typeof result !== 'undefined' && result.affectedRows !== 'undefined') {
+
+            return callback(null, {
+                ok: true,
+                id: result
+            });
+        }
+    };
+    connection.end(function(err) {
+        if (err)
+            return err;
+        }
+    )
+};
+
+
+
+
     module.exports = dal;

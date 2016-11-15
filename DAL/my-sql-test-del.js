@@ -11,13 +11,16 @@
 const dal =require('./my-sql.js')
 
   const data = {
-    _id: 13,
-    firstName: "Jiffy",
-    lastName: "Mixxen",
-    phone: "626-758-4498",
-    email: "JiffyMixxenJr@gmail.com",
-    type: "person",
-    active: true
+
+    desc:"Porvide food relief for Haiti families",
+    name: "Feeding Friends Haiti",
+    organizationID: "Church of Saints",
+    phase: "planning",
+    start: "2016-12-12",
+    end: "2016-12-20",
+    type: "relief",
+    location: "Haiti"
+    //active: true
 }
 
 
@@ -28,7 +31,7 @@ return  console.log ("shit", err)
   console.log ("shit", result)
 }
 
-dal.deletePerson(data, callback)
+dal.createReliefEffort(data, callback)
 
 console.log(dal);
 

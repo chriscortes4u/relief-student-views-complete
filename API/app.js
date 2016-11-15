@@ -5,11 +5,16 @@ var app = express();
 const HTTPError = require('node-http-error');
 const port = process.env.PORT || 4000;
 //const dal = dalNoSQL == 'nosql' ? require('../DAL/no-sql.js') : require('../DAL/no-sql.js');
-const dal = require('../DAL/my-sql.js');
+const dal = require('../DAL/no-sql.js');
 var bodyParser = require('body-parser');
 app.use(bodyParser.json());
 var jsonParser = bodyParser.json();
 
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 //////////////////person//////////////////////////
 
 app.get('/person/:id', function(req, res, next) {
